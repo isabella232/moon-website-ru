@@ -1,0 +1,65 @@
+{
+  "features": [
+    {
+      "title": "Собственный кластер",
+      "description": "Работает на любом оборудовании\nи в облаке",
+      "icon": "cluster"
+    },
+    {
+      "title": "Бесконечное количество браузеров",
+      "description": "Запускайте столько браузеров,\nсколько позволяет ваш кластер",
+      "icon": "browsers"
+    },
+    {
+      "title": "Поддержка Openshift",
+      "description": "Работает в Kubernetes и в Openshift",
+      "icon": "openshift"
+    },
+    {
+      "title": "Гибкая цена",
+      "description": "Любое количество параллельных\nсессий в месяц",
+      "icon": "pricing"
+    }
+  ],
+  "navigation": [
+    {
+      "name": "О продукте",
+      "url": "#about"
+    },
+    {
+      "name": "Документация",
+      "url": "#docs"
+    },
+    {
+      "name": "Контакты",
+      "url": "#contact"
+    }
+  ],
+  "verticals": [
+    {
+      "name": "Aerokube (англ.)",
+      "url": "https://aerokube.com/"
+    },
+    {
+      "name": "Browsers (англ.)",
+      "url": "https://browsers.aerokube.com/"
+    }
+  ],
+  "docs": [
+    {
+      "title": "Инструкция по установке",
+      "description": "Подробное руководство по установке Moon",
+      "url": "/docs/setup.pdf"
+    },
+    {
+      "title": "Общее руководство",
+      "description": "Руководство по эксплуатации и использованию Moon",
+      "url": "/docs/main.pdf"
+    },
+    {
+      "title": "Описание жизненного цикла",
+      "description": "Основные этапы жизненного цикла Moon",
+      "url": "/docs/lifecycle.pdf"
+    }
+  ]
+}

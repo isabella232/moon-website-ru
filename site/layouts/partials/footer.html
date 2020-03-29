@@ -1,0 +1,28 @@
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <nav class="col-12 col-md footer__left">
+                <ul>
+                    {{ range .Site.Data.meta.verticals }}
+                    <li><a href="{{ .url }}">{{ .name }}</a></li>
+                    {{ end }}
+                </ul>
+            </nav>
+            <nav class="col-12 col-md footer__right">
+                <ul>
+                    {{ range .Site.Data.meta.navigation }}
+                    <li><a href="{{ .url }}">{{ .name }}</a></li>
+                    {{ end }}
+                </ul>
+            </nav>
+        </div>
+        <div class="row">
+            <div class="col footer__separator"></div>
+        </div>
+        <div class="row footer__bottom align-items-center">
+            <div class="col-12 col-md-auto footer__copyright">© {{ now.Format "2006"}} ООО "Аерокуб"</div>
+            <div class="col-12 col-md footer__terms">
+            </div>
+        </div>
+    </div>
+</footer>

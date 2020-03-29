@@ -1,0 +1,15 @@
+<div class="container about">
+    <div class="row">
+        <div class="col">
+            <h2 class="about__title" id="about">О продукте</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8 col-md-8">
+            <p class="about__description">Moon - решение для организации ручного и автоматизированного тестирования веб-приложений в настольных и мобильных браузерах на основе протокола <a href="https://www.w3.org/TR/webdriver/" target="_blank">Selenium WebDriver</a>, работающее в кластере <a href="https://kubernetes.io/">Kubernetes</a> или <a href="https://www.openshift.com/">Openshift</a>. Поставляется с набором готовых образов для тестирования в поддерживаемых браузерах и мобильных платформах. Отказоустойчиво и умеет автоматически масштабироваться под текущую нагрузку.</p>
+        </div>
+        <div class="col-4 col-md-4">
+            {{ partial "browsers" . }}
+        </div>
+    </div>
+</div>

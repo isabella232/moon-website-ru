@@ -1,0 +1,15 @@
+baseurl = "/"
+languageCode = "ru-ru"
+languageLang = "ru"
+title = "Aerokube Moon | Selenium решение для Kubernetes или Openshift"
+
+enableRobotsTXT = true
+
+
+# RSS, categories and tags disabled for an easy start
+# See configuration options for more details:
+# https://gohugo.io/getting-started/configuration/#toml-configuration
+disableKinds = ["RSS", "taxonomy", "taxonomyTerm"]
+
+[params]
+description = "Платформа для тестирования в настольных и мобильных браузерах. Полностью совместима с протоколом Selenium WebDriver. Поддерживает автоматизированное и ручное тестирование. Работает в класстере Kubernetes и Openshift. Работает в на вашем оборудовании или в популярных облачных платформах: Google Cloud, Amazon Web Services, DigitalOcean, Microsoft Azure и других."
