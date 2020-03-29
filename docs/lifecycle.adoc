@@ -1,0 +1,18 @@
+= Описание жизненного цикла ПО "Moon"
+:revdate: {docdate}
+:toc-title: Содержание
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectanchors:
+:author: ООО "Аерокуб"
+:revnumber: latest
+:icons: font
+:source-highlighter: coderay
+:docinfo: shared
+
+Версия документа: _{revnumber}_ от _{docdatetime}_
+
+Moon is a browser automation solution compatible with https://www.w3.org/TR/webdriver/[Selenium Webdriver] protocol and using https://kubernetes.io/[Kubernetes] to launch browsers.
+
+== Getting Started

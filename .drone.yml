@@ -13,6 +13,20 @@ pipeline:
     when:
       event: [push, tag, pull_request]
 
+  latest_docs:
+    image: asciidoctor/docker-asciidoctor
+    commands:
+      - ./docs/docs.sh latest
+    when:
+      event: [push]
+
+  release_docs:
+    image: asciidoctor/docker-asciidoctor
+    commands:
+      - ./ci/docs.sh ${DRONE_TAG}
+    when:
+      event: [tag]
+
   moon_website_latest_image:
     image: plugins/docker
     registry: registry.aerokube.com

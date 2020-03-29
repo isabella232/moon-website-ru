@@ -4,3 +4,4 @@ site/data/webpack.json
 .idea
 *.iml
 .DS_Store
+docs/*.pdf
