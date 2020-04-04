@@ -1,6 +1,7 @@
 = Описание жизненного цикла ПО "Moon"
 :revdate: {docdate}
 :toc-title: Содержание
+:front-cover-image: images/cover.png
 :toc: left
 :toclevels: 3
 :sectnums:
