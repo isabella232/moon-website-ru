@@ -1,0 +1,730 @@
+= Общее Руководство по ПО "Moon"
+:revdate: {docdate}
+:toc-title: Содержание
+:front-cover-image: images/cover.png
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectanchors:
+:author: ООО "Аерокуб"
+:revnumber: latest
+:icons: font
+:source-highlighter: coderay
+:docinfo: shared
+
+Версия документа: _{revnumber}_ от _{docdatetime}_
+
+== О документе
+
+Документ предназначен для технических специалистов, которые установили и занимаются эксплуатацией ПО "Moon".
+
+== Глоссарий
+
+**Kubernetes** - программное решение с https://github.com/kubernetes/kubernetes[открытым исходным кодом] для автоматического распределения произвольного количества контейнеров по произвольному набору серверов или виртуальных машин.
+
+**YAML** - текстовый формат хранения данных, описанный на сайте https://yaml.org/[https://yaml.org/].
+
+**Манифест*** - текстовое описание набора подов, сервисов, сетевых балансировщиков и других сущностей Kubernetes \ Openshift, которые требуется запустить для правильной работы ПО "Moon".
+
+**Под (Pod)** - набор из одного или нескольких контейнеров, имеющих одинаковый сетевой адрес и запускаемых как единое целое в кластере Kubernetes \ Openshift.
+
+**ConfigMap** - сущность Kubernetes \ Openshift, позволяющая хранить набор ключей и значений в открытом виде и подключать их к подам.
+
+**Секрет (Secret)** - сущность Kubernetes \ Openshift, позволяющая хранить набор ключей и значений в закрытом виде и подключать их к подам. В основном используется для безопасного хранения данных учетных записей.
+
+**S3** - открытый протокол надежного хранения большого количества файлов от компании Amazon, ставший мировым фактическим стандартом хранения больших объемов данных и поддерживаемый в большинстве популярных облачных платформ.
+
+**S3 бакет (bucket)** - организационная единица, позволяющая группировать логически связанные данные в S3-совместимом хранилище. Фактически представляет собой "каталог" верхнего уровня с фиксированным именем, в который складывается все файлы конкретного проекта.
+
+**Selenium** или **WebDriver** - программный протокол для запуска и управления браузерами и мобильными тестовыми средами, работающий поверх протокола HTTP. Подробное описание протокола дано по https://www.w3.org/TR/webdriver/[ссылке].
+
+**Selenium URL** - сетевой адрес, используемый для запуска браузеров по протоколу Selenium и для взаимодействия с уже запущенными браузерами.
+
+**Капабилити (Capabilities)** - набор пар ключ-значение, позволяющие указать требуемую версию браузера и активировать дополнительные возможности в браузерах: включать видеозапись, изменять разрешение экрана, выставлять переменные окружения и так далее. Значение может быть строкой, числом, булевым значением, списком и так далее.
+
+**Сессия Selenium** или **браузерная сессия** - один запущенный браузер или мобильная платформа от момента запуска до завершения.
+
+**API (Application Program Interface)** - возможный способ взаимодействия с работающий приложением. В случае Moon как правило речь идет о возможности формирования HTTP-запросов, обеспечивающих определенные дополнительные возможности.
+
+== Общие сведения
+
+**Moon** - решение для организации ручного и автоматизированного тестирования веб-приложений в настольных и мобильных браузерах на основе протокола https://www.w3.org/TR/webdriver/[Selenium WebDriver], работающее в кластере https://kubernetes.io[Kubernetes] или https://www.openshift.com/[Openshift].
+
+**Основные области применения:** функциональное тестирование веб-приложений в настольных и мобильных браузерах, функциональное тестирование мобильных приложений под платформу Android.
+
+**Moon** обеспечивает:
+
+. **Надежное выполнение автоматизированных Selenium тестов**.
+. **Автоматическое масштабирование кластера в зависимости от нагрузки**. В зависимости от текущего количества запущенных браузеров кластер становится больше или меньше, автоматически добавляя или убирая доступные вычислительные ресурсы.
+. **Отказоустойчивость**. Moon предоставляет возможность иметь несколько одновременно запущенных копий и продолжает работать при отказе всех копий кроме одной.
+. **Надежное хранение логов и видеозаписей выполняемых тестов.** Данные автоматически загружаются в S3-совместимом хранилище.
+. **Возможность гибкого контроля за потреблением ресурсов.** Имеет возможность назначения доступного количества процессорных ядер и оперативной памяти на каждый запускаемый браузер.
+
+Moon поставляется с набором готовых Docker-образов для тестирования в поддерживаемых браузерах и мобильных платформах: Chrome, Firefox, Opera, Internet Explorer, Microsoft Edge, Android и других.
+
+== Основные возможности
+
+=== Запуск тестов
+
+**Moon** полностью совместим с протоколом Selenium WebDriver, поэтому для запуска браузерных сессий следует использовать стандартный URL:
+
+    http://moon.example.com:4444/wd/hub
+
+Здесь `moon.example.com` - доменное имя, присвоенное администратором кластера при его установке. В остальном использование Moon для запуска тестов в браузерах не отличается от других реализаций протокола WebDriver и не требует изменения кода тестов.
+
+=== Получение доступа в файлам, скачанным браузером
+
+NOTE: Файлы доступны только в момент работы браузера и пропадают после завершения браузерной сессии.
+
+Иногда в тестах может потребоваться проанализировать файлы, скачанные браузером. Для получения доступа к таким файлам Moon предоставляет специальное `/download` API, значительно упрощающее получение доступа к скачанным файлам. Для того, чтобы использовать это API:
+
+. Запустите новую браузерную сессию, например, с идентификатором `firefox-61-0-f2bcd32b-d932-4cdc-a639-687ab8e4f840`.
+. В коде тестов сохраните файлы в каталог `/home/selenium/Downloads` или `~/Downloads`.
+. Теперь вы можете скачать сохраненные файлы, используя следующий адрес:
++
+```
+http://moon-host.example.com:4444/download/firefox-61-0-f2bcd32b-d932-4cdc-a639-687ab8e4f840/myfile.txt
+```
+. Закройте Selenium сессию.
+
+=== Доступ к буферу обмена браузера
+
+NOTE: Доступ к буферу обмена можно получить только во время работы браузерной сессии.
+
+Иногда вам может потребоваться получить доступ к буферу обмена работающего браузера, чтобы проверить, что функция копирования-вставки работает правильно. Moon предоставляет выделенное API для взаимодействия с буфером обмена:
+
+. Запустите новую браузерную сессию, например, с идентификатором `firefox-61-0-f2bcd32b-d932-4cdc-a639-687ab8e4f840`.
+. Чтоыб получить значение из буфера обмена, отправьте следующий HTTP запрос:
++
+```
+$ curl http://moon-host.example.com:4444/clipboard/firefox-61-0-f2bcd32b-d932-4cdc-a639-687ab8e4f840
+
+some-clipboard-value
+```
+. Чтобы выставить значение в буфере обмена, выполните такой HTTP запрос:
++
+```
+$ curl -X POST --data 'some-clipboard-value' http://moon-host.example.com:4444/clipboard/firefox-61-0-f2bcd32b-d932-4cdc-a639-687ab8e4f840
+```
+
+=== Специальные капабилити
+
+Moon поддерживает некоторые специальные капабилити, которые можно передавать в исходном коде тестов, чтобы включить и отключить дополнительную функциональность.
+
+==== Пользовательское разрешение экрана: screenResolution
+
+Moon позволяет выставлять пользовательское разрешение экрана в запускаемых контейнерах с браузерами:
+
+.Тип: строка, формат: <ширина>x<высота>
+----
+screenResolution: "1280x1024"
+----
+
+Дополнительно можно указывать глубину цвета в битах:
+
+.Тип: строка, формат: <ширина>x<высота>x<глубина-цвета-в-битах>
+----
+screenResolution: "1280x1024x24"
+----
+
+==== Видеозапись: enableVideo, videoName, videoScreenSize, videoFrameRate, videoCodec
+
+Для включения видеозаписи добавьте капабилити:
+
+.Тип: булево значение
+----
+enableVideo: true
+----
+
+* По-умолчанию записанные видео файлы сохраняются с именем `<id-сессии>.mp4`, где `<id-сессии>` - уникальный идентификатор текущей Selenium сессии.
+Для того, чтобы указать свое имя видеофайла, используйте капабилити:
++
+.Тип: строка
+----
+videoName: "my-cool-video.mp4"
+----
++
+WARNING: При указании имени файла важно добавлять расширение `mp4`.
+
+* По-умолчанию в записанное видео попадает вся видимая область экрана.
+При помощи капабилити `screenResolution` вы можете изменить разрешение экрана (ширину и высоту). Чтобы записать на видео только часть экрана - используйте капабилити `videoScreenSize`. Если размер, указанный в этом капабилити меньше размера экрана, то экран на видео будет обрезан, начиная с верхнего левого угла:
++
+.Тип: строка
+----
+videoScreenSize: "1024x768"
+----
+
+* По-умолчанию частота следования кадров на видео равно `12` кадров в секунду. Указание капабилити `videoFrameRate` позволяет изменить это значение:
++
+.Тип: целое число
+----
+videoFrameRate: 24
+----
+
+* По-умолчанию Moon использует кодек `libx264` для сохранения видео. Если в вашем кластере этот кодек потребляет слишком много процессорного времени, вы можете изменить его при помощи капабилити `videoCodec`:
++
+.Тип: строка
+----
+videoCodec: "mpeg4"
+----
+
+==== Независимый часовой пояс для каждой сессии: timeZone
+
+Некоторые тесты требуют явного выставления конкретного часового пояса в каждом запускаемом браузере.
+
+.Тип: строка
+----
+timeZone: "Europe/Moscow"
+----
+
+Список возможных значений часовых поясов можно увидеть https://en.wikipedia.org/wiki/List_of_tz_database_time_zones[здесь].
+По-умолчанию запускаемые браузеры будут использовать тот же часовой пояс, что и сам Moon.
+
+==== Независимые переменные окружения для каждой сессии: env
+
+Иногда вам может потребоваться выставлять переменные окружения независимо для каждого теста (например, при тестировании работы веб-приложения с разными языковыми настройками). Переменные окружения можно выставить вот так:
+
+.Тип: список, формат: <ключ>=<значение>
+----
+env: ["LANG=ru_RU.UTF-8", "LANGUAGE=ru:en", "LC_ALL=ru_RU.UTF-8"]
+----
+
+Переменные окружения из этой капабилити добавляются к значениям, выставленным в конфигурационном файле Moon.
+
+==== Независимые записи /etc/hosts для каждой сессии: hostsEntries
+
+Хотя список записей в файле `/etc/hosts` можно сконфигурировать отдельно для каждой версии браузер в файле <<Список браузеров>>, иногда вам может потребоваться добавить дополнительные записи в конкретных тестовых сценариях. Этого легко можно достичь таким способом:
+
+.Тип: список, формат: <имя-хоста>:<ip-адрес>
+----
+hostsEntries: ["example.com:192.168.0.1", "test.com:192.168.0.2"]
+----
+
+Записи из этой капабилити будут перекрывать значения, выставленные в глобальной конфигурации Moon.
+
+==== Пользовательский таймаут сессии: sessionTimeout
+
+Иногда вам может потребоваться изменить значение таймаута завершения бездействующих браузерных сессий для конкретных тестов. Для этого передайте следующую капабилити :
+
+.Тип: строка
+----
+sessionTimeout: "1m30s"
+----
+
+Таймаут всегда указывается в формате, используемом в языке программирования Golang, например, `30s` или `2m` или `1h2m30s` и так далее.
+
+==== Шаблон для сохранения файлов в S3 хранилище: s3KeyPattern
+
+Эта капабилити позволяет переопределить шаблон для сохранения файлов в S3 хранилище (указывается в ключе `s3 > keyPattern` в файле `service.json`).
+
+.Тип: строка
+----
+s3KeyPattern: "$quota/$browserName/$sessionId"
+----
+
+Поддерживаются те же самые ключи, что описаны в разделе <<Загрузка файлов в S3>>.
+
+==== Указание капабилити как расширение протокола WebDriver
+
+Некоторые клиенты Selenium позволяют передавать лишь ограниченный набор стандартных капабилити, описанных в https://w3c.github.io/webdriver/webdriver-spec.html[стандарте WebDriver]. Для таких ситуаций Moon позволяет передавать специальные капабилити, используя т.н. https://w3c.github.io/webdriver/webdriver-spec.html#protocol-extensions[расширения протокола WebDriver]. Два следующих примера дают одинаковый результат. Обычно капабилити передаются вот так:
+
+.Обычный способ передачи капабилити
+----
+{"browserName": "firefox", "version": "62.0", "screenResolution": "1280x1024x24"}
+----
+
+Moon использует ключ `moon:options` для того, чтобы зачитать капабилити, указанные как расширения протокола WebDriver:
+
+.Передача капабилити через расширения протокола WebDriver
+----
+{"browserName": "firefox", "version": "62.0", "moon:options": {"screenResolution": "1280x1024x24"}}
+----
+
+== Конфигурирование
+
+=== Список пользователей
+
+Moon - многопользовательское приложение, позволяющее разным пользователям получать доступ к разным версия браузеров. Для хранения списка пользователей по-умолчанию используется один файл формата https://httpd.apache.org/docs/2.4/misc/password_encryptions.html[htpasswd]. Этот файл сохраняется в виде https://kubernetes.io/docs/concepts/configuration/secret/[секрета Kubernetes] и подключается в Moon при помощи встроенных возможностей Kubernetes (volumes). Список пользователей представляет собой текстовый файл с именами пользователей и зашифрованными паролями, разделенными двоеточием:
+
+```
+$ cat users.htpasswd
+test:$apr1$.dZyHlKN$jdoZkin/kPviFNArx/cVL1 # User is test, password is encrypted
+alice:$apr1$mLYJAC4y$VYeJstWjWP/4iVlH/TNcD.
+bob:$apr1$gyqzbSpt$RBNcxrsQaolPZCQZW0VQW1
+```
+
+==== Обновление списка пользователей
+Чтобы добавить или удалить пользователей:
+
+. Измените файл `users.htpasswd` при помощи команды `htpasswd`:
+
+    $ htpasswd -Bbn new-user new-user-password >> users.htpasswd # Adding new user
+    $ htpasswd -Bb users.htpasswd some-user new-password # Updating password
+    $ htpasswd -D users.htpasswd test-user # Deleting existing user
+
+. Обновите секрет `users`:
+
+    $ kubectl replace secret users --from-file=./users.htpasswd -n moon
+
+. Изменения применяются немедленно без необходимости перезагружать Moon.
+
+=== Список браузеров
+
+Moon использует файлы формата https://ru.wikipedia.org/wiki/JSON[JSON] для хранения списка доступных браузеров. Обычно такой файл выглядит следующим образом:
+
+.Обычный файл со списком браузеров
+[source,javascript]
+----
+{
+  "firefox": {                                      <1>
+    "default": "62.0",                              <2>
+    "versions": {                                   <3>
+      "62.0": {                                     <4>
+        "image": "selenoid/firefox:62.0",           <5>
+        "port": "4444",                             <6>
+        "path": "/wd/hub",                          <7>
+        "resources": {                              <8>
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "200m",
+            "memory": "1Gi"
+          }
+        },
+        "privileged": true,                         <9>
+        "nodeSelector": {                           <10>
+          "node-type": "hardware"
+        },
+        "env": ["TZ=Europe/Moscow", "LANG=ru"],     <11>
+        "hosts": ["example.com:192.168.0.1"],       <12>
+      },
+      "60.0": {
+        //...
+      }
+    }
+  },
+  "chrome": {
+    //...
+  },
+  "opera": {
+    "default": "56.0",
+    "versions": {
+        //...
+    }
+  }
+}
+----
+<1> Имя браузера
+<2> Версия браузера по-умолчанию
+<3> Список доступных версий браузеров
+<4> Версия браузера
+<5> Образ для запуска браузера
+<6> Сетевой порт для перенаправления соединений. В большинстве случаев должен быть равен 4444.
+<7> Путь, относительно /, куда должен отправляться запрос на создание Selenium сессии
+<8> Конфигурация вычислительных ресурсов, доступных браузеру (память и процессор)
+<9> Позволяет запускать поды в привилегированном режиме (выключено по-умолчанию)
+<10> Kubernetes node selector (позволяет запускать поды с браузерами на строго определенных хостах Kubernetes)
+<11> Переменные окружения, выставляем в контейнере с браузером
+<12> Пользовательские записи в файле `/etc/hosts` в формате `hostname:ip`
+
+==== Списки браузеров для отдельных пользователей
+
+Для того, чтобы назначить разным пользователям разные доступные версии браузеров, вам нужно создать по одному файлу с именем `<имя-пользователя>.json` для каждого пользователя. Например, для пользователя `alice` из файла `users.htpasswd` вам необходимо создать файл `alice.json`. Все JSON файлы должны храниться в каталоге, указанном флагом `-quota-dir` следующим образом:
+
+.Хранение списков браузеров для отдельных пользователей
+----
+\---quota
+    |---- alice.json
+    |---- browsers.json
+    |---- bob.json
+    |---- test.json
+----
+
+Такой каталог затем загружается в https://kubernetes.io/docs/tasks/configure-pod-container/configmap/[Kubernetes ConfigMap] и монтируется в контейнер Moon средствами Kubernetes volumes.
+
+====  Гостевая квота
+
+В некоторых случаях вам может потребоваться анонимный доступ в Selenium (без указания имени пользователя и пароля). В Moon это называется `гостевая квота` и настраивается при помощи флага `-guest-user` (значение по-умолчанию - `browsers`). Любые версии браузеров, указанные в файле `<guest-user>.json` (`<guest-user>` - имя гостевого пользователя, переданное флагом `-guest-user`) будут доступны без указания имени пользователя и пароля:
+
+.Имя файла с гостевой квотой
+----
+-guest-user browsers ====> browsers.json # Значение по-умолчанию
+-guest-user guest-user ====> guest-user.json
+----
+
+==== Обновление списка браузеров
+Чтобы изменить список браузеров:
+
+. Имя список файлов с квотами, хранящийся в каталоге `quota`, внесите необходимые изменения.
+. Обновите ConfigMap с именем `quota`, используя содержимое каталога `quota`:
+
+    $ kubectl replace configmap quota --from-file=quota -n moon
+
+. Изменения применяются мгновенно без перезагрузки Moon. Все уже запущенные браузерные сессии продолжат работать.
+
+=== Конфигурационный файл
+
+Moon хранит дополнительные конфигурационные настройки (например, настройки S3) в специальном JSON файле `service.json`:
+
+.Типовой файл `service.json`
+[source,javascript]
+----
+{
+  "s3": {                                          <1>
+    "endpoint": "https://storage.googleapis.com",  <2>
+    "bucketName": "moon-test",                     <3>
+    "version": "S3v2",                             <4>
+    "keyPattern": "$quota/$date"                   <5>
+  },
+  "images": {                                      <6>
+    "logger": {                                    <7>
+      "image": "my-reg.com/moon/logger:1.2.0",     <8>
+      "cpu": "0.3",                                <9>
+      "mem": "1024Mi"                              <10>
+    }
+  },
+  "annotations": {                                 <11>
+    "key1": "value1",                              <12>
+    "key2": "value2"
+  },
+  "labels": {                                      <13>
+    "key1": "value1",                              <14>
+    "key2": "value2"
+  }
+}
+----
+<1> Раздел конфигурирования S3
+<2> Адрес S3 API
+<3> Имя S3 бакета
+<4> Версия S3 подписи (`S3v2` или `S3v4`)
+<5> Шаблон сохранения файлов в S3
+<6> Раздел для настройки пользовательских образов системных компонентов Moon (для использования Moon с собственным Docker репозиторием)
+<7> Настройка системного компонента Moon (одно из значений: `logger`, `defender` или `videoRecorder`)
+<8> Образ системного компонента Moon
+<9> Количество процессорных ядер, доступных системному компоненту Moon
+<10> Количество памяти, доступное системному компоненту Moon
+<11> Пользовательские аннотации (annotations) подов (применяется ко всем подам с браузерами)
+<12> Ключ и значение пользовательских аннотаций подов
+<13> Пользовательские метки (labels) подов (применяется ко всем подам с браузерами)
+<14> Ключ и значение пользовательских меток подов
+
+Файл `service.json` монтируется в контейнер Moon в виде обычного файла, использую Kubernetes ConfigMap. Путь до смонтированного конфигурационного файла указывается флагом `-config-file`. Любые изменения в файле применяются автоматически - без перезагрузки Moon.
+
+.Как добавить файл `service.json` в Moon
+[source,yaml]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: moon
+data:
+  service.json: |
+    {
+      "s3": {
+        "endpoint": "https://storage.googleapis.com",
+        "bucketName": "moon-test",
+        "version": "S3v2"
+      }
+    }
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: moon
+  namespace: moon
+spec:
+  template:
+    metadata:
+      labels:
+        app: moon
+    spec:
+      containers:
+      - name: moon
+        image: aerokube/moon:latest-release
+        args: ["-config-file", "/config/service.json"]
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+    volumes:
+      - name: config
+        configMap:
+          name: config
+----
+
+=== Хранение внешних учетных записей
+
+Moon читает все учетные записи (например, данные для доступа к S3) из дополнительного Kubernetes секрета с именем `credentials`. Этот секрет монтируется в контейнер Moon, при этом каждый ключ хранится в виде отдельного файла. Путь до каталога с учетными записями указывается флагом `-credentials-dir`. Любые изменения в секрете `credentials` применяются мгновенное - без перезагрузки Moon.
+
+.Как добавить секрет `credentials` в Moon
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: credentials
+  namespace: moon
+stringData:
+  s3.accessKey: "access-key-value"
+  s3.secretKey: "secret-key-value"
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: moon
+  namespace: moon
+spec:
+  template:
+    metadata:
+      labels:
+        app: moon
+    spec:
+      containers:
+      - name: moon
+        image: aerokube/moon:latest-release
+        args: ["-credentials-dir", "/credentials"]
+        volumeMounts:
+        - name: credentials
+          mountPath: /credentials
+          readOnly: true
+    volumes:
+    - name: credentials
+      secret:
+        secretName: credentials
+----
+
+Поддерживаются следующие ключи:
+
+.Поддерживаемые ключи
+|===
+| Ключ | Значение
+
+| s3.accessKey | Имя пользователя S3 (access key)
+| s3.secretKey | Пароль S3 (secret key)
+|===
+
+=== Как установить лицензию
+
+Без лицензионного ключа вы можете бесплатно и неограниченно по времени использовать Moon для запуска **не более 4 параллельно работающих браузерных сессий**. Если вы хотите запускать большее количество браузерных сессий - приобретите лицензию и используйте инструкции в этом разделе для установки ключа.
+
+. Для установки лицензии у вас должен быть файл с лицензионным ключом. Обычно лицензионный ключ выглядит так:
+
+    $ cat license.key
+    Ti90a3ljSWpvV3hicU5ZY3U3ZVNMUzdzalVjU29nSVU2a3lmWDdENmhOSEs4SFJVVE5LNEpKL2oxRGhWTnRhZVBEQmx5cm1SM0dFWlVpbGIwOWhBSUpvWmlQMnNtYmtoZVRDbnJ3UTlIV3grMUMzaXFJalU3L0NIZDJuSzN3QUpIS0lyV2VoVjlRVUh5NzNCMFg0NEV5KzFSVXg1elhvaC9RUkNjTlBIOHR4WWtrRFBmTFhxYTFESlI0aXNObGtobWpXY2VJNVdna1lsWHFFOUp0OUxValZPN05hb2pCcHJzY0pvZjBrZys2YkhWUDR3cUJvYVFoSFJTYzMzZzNRSTkrWVd4dlZCeExmdTVxM2k2ZnluMDRHSEhGc21Fd2owVHdVa1Z3MmI5Z2FyVXlaVFF4RDdCRjVSVjBmSUVrU1pEQ0ZQdmIvMHZoKythY1V4OVRrR2FBREZzbWR3dExxRlU4NHF3MzBVdE5nTGhnNWYxRXRCQ215R1BHR0wyK2NpR0RDZDBTSXg4K1RsRGNWVzUyVVY4MUt6bkdOanJhTklOeXVtYjVPVXF6aVVpdmJZeVJNVVBSMWF3NUJRVGJDaHVycWVVdGtMMWFRZDgwOCtoWGRxODFOakxRNEJlVENNQTdPL2FneHBTUE1nL0J2QmVQKy84ZGhJeXd5Y0lxQVJhVWxocUdmUko2K05tbkFYV0hzZ2RjTng1dUVHU0w5VWF5TU1rR3RkZEZKQ1FiWmF0RnJMaDFHbHhKTndBRHFWcXIvQ0oxSzBQL2p6K2NFSWpsSG82TktvM3pudVFlanhYT2tGU1p1bWZrS1krZmF3VkVRZWlvcFlmZFk0TU9tc3U5TThsbng3T2VXQXZmOTFUQ2w1NUhBK1ZsQTMzN3VFOG1WV3ZlS0E1Tlk9O2V5SnNhV05sYm5ObFpTSTZJa0ZqYldVZ1RFeERJaXdpY0hKdlpIVmpkQ0k2SWsxdmIyNGlMQ0p0WVhoVFpYTnphVzl1Y3lJNk1qQXNJblJ2SWpveE5UTTRNelV5TURBd2ZRPT0=
+
++
+Moon ожидает, что файл с лицензионным ключом будет присутствовать по пути, указанном флагом `-license-file`. Для этого вам нужно сохранить лицензионный ключ в Kubernetes секрет и примонтировать его в контейнеры Moon средствами Kubernetes.
+
+. Имея лицензионный ключ, создайте секрет Kubernetes:
+
+    $ kubectl create secret generic license-key --from-file /path/to/license.key -n moon
+
++
+YAML манифест, дающий аналогичный результат, выглядит следующим образом:
++
+.Создание секрета для лицезионного ключа
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: license-key
+  namespace: moon
+stringData:
+  license.key: Ti90a3ljSWpvV3hicU5ZY3U3ZVNMUzdzalVjU29nSVU2a3lmWDdENmhOSEs4SFJVVE5LNEpKL2oxRGhWTnRhZVBEQmx5cm1SM0dFWlVpbGIwOWhBSUpvWmlQMnNtYmtoZVRDbnJ3UTlIV3grMUMzaXFJalU3L0NIZDJuSzN3QUpIS0lyV2VoVjlRVUh5NzNCMFg0NEV5KzFSVXg1elhvaC9RUkNjTlBIOHR4WWtrRFBmTFhxYTFESlI0aXNObGtobWpXY2VJNVdna1lsWHFFOUp0OUxValZPN05hb2pCcHJzY0pvZjBrZys2YkhWUDR3cUJvYVFoSFJTYzMzZzNRSTkrWVd4dlZCeExmdTVxM2k2ZnluMDRHSEhGc21Fd2owVHdVa1Z3MmI5Z2FyVXlaVFF4RDdCRjVSVjBmSUVrU1pEQ0ZQdmIvMHZoKythY1V4OVRrR2FBREZzbWR3dExxRlU4NHF3MzBVdE5nTGhnNWYxRXRCQ215R1BHR0wyK2NpR0RDZDBTSXg4K1RsRGNWVzUyVVY4MUt6bkdOanJhTklOeXVtYjVPVXF6aVVpdmJZeVJNVVBSMWF3NUJRVGJDaHVycWVVdGtMMWFRZDgwOCtoWGRxODFOakxRNEJlVENNQTdPL2FneHBTUE1nL0J2QmVQKy84ZGhJeXd5Y0lxQVJhVWxocUdmUko2K05tbkFYV0hzZ2RjTng1dUVHU0w5VWF5TU1rR3RkZEZKQ1FiWmF0RnJMaDFHbHhKTndBRHFWcXIvQ0oxSzBQL2p6K2NFSWpsSG82TktvM3pudVFlanhYT2tGU1p1bWZrS1krZmF3VkVRZWlvcFlmZFk0TU9tc3U5TThsbng3T2VXQXZmOTFUQ2w1NUhBK1ZsQTMzN3VFOG1WV3ZlS0E1Tlk9O2V5SnNhV05sYm5ObFpTSTZJa0ZqYldVZ1RFeERJaXdpY0hKdlpIVmpkQ0k2SWsxdmIyNGlMQ0p0WVhoVFpYTnphVzl1Y3lJNk1qQXNJblJ2SWpveE5UTTRNelV5TURBd2ZRPT0=
+----
+
+. При запуске Moon смонтируйте созданный секрет в виде файла и укажите флагом `-license-file` на смонтированный файл:
++
+.Запуск Moon с лицензионным ключом
+[source,yaml]
+----
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: moon
+  namespace: moon
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: moon
+    spec:
+      containers:
+      - name: moon
+        image: aerokube/moon:latest-release
+        args: ["-license-file", "/license/license.key"] # Флаг указывает на лицензионный ключ
+        resources:
+            # Список доступных вычислительных ресурсов
+        ports:
+            # Список портов
+        volumeMounts:
+        - name: license-key # Монтируем ключ из секрета в файл
+          mountPath: /license
+          readOnly: true
+    volumes:
+    - name: license-key # Создаем Kubernetes volume из секрета
+      secret:
+        secretName: license-key
+----
+
+=== Загрузка файлов в S3
+
+Вы можете настроить Moon, чтобы все журналы (логи) браузерных сессии и записанные видеофайлы автоматически сохранялись в https://ru.wikipedia.org/wiki/Amazon_S3[S3]-совместимое хранилище. Такой тип хранилища поддерживается большинством публичных облачных платформ. Для создания собственного S3-совместимого хранилища вы можете использовать инструмент https://minio.io/[Minio]. Чтобы включить поддержку S3 в Moon:
+
+. Создайте S3 бакет согласно инструкции для выбранной облачной платформы. В данном примере предполагается, что имя бакета - `moon-test`. При создании бакета вы также получите пару ключей: access key и secret key для доступа к бакету. Также вам потребуется знать поддерживаемую версию S3 протокола (обычно указано в документации).
+. Создайте конфигурационный файл `service.json` со следующим содержимым:
+
+    $ cat service.json
+    {
+      "s3": {
+        "endpoint": "https://storage.googleapis.com",
+        "bucketName": "moon-test",
+        "version": "S3v2"
+      }
+    }
+
+. Сохраните файл `service.json` в Kubernetes config map, смонтируйте его в виде файл в контейнер Moon и затем укажите путь до файла при помощи флага `-config-file`, как показано в разделе <<Конфигурационный файл>>.
+. Создайте Kubernetes секрет для хранения пары S3 ключей, смонтируйте его как каталог в контейнер Moon и затем укажите путь до этого каталога при помощи флага `-credentials-dir`, как показано в разделе <<Хранение внешних учетных записей>>.
++
+.Секрет с S3
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: credentials
+  namespace: moon
+stringData:
+  s3.accessKey: "access-key-value"
+  s3.secretKey: "secret-key-value"
+----
+
+. По умолчанию данные складывается в S3 бакет следующим образом:
++
+.Расположение файлов в S3 бакете по-умолчанию
+----
+\---my-bucket
+    \---- <session-id>
+        |---- video.mp4
+        |---- session.log
+----
++
+Moon позволяет складывать файл в S3 бакет в виде произвольной иерархии, используя т.н. **шаблон S3 ключа** и подставляя в него настоящие значения, относящиеся к Selenium сессии. Типичный шаблон S3 ключа выглядит следующим образом:
++
+.Типичный шаблон S3 ключа
+----
+$quota/$browserName/$browserVersion/$platformName/$sessionId
+----
++
+Здесь каждая из строк: `$quota`, `$browserName`, `$browserVersion` и так далее будут заменены соответствующей информацией: именем пользователя, именем браузера, версией браузера. Полученный S3 ключ будет использоваться как "каталог" для сохранения записанных логов и видео файлов. Список поддерживаемых переменных в шаблоне приведен в таблице:
++
+.Поддерживаемые переменные в шаблоне S3 ключа
+|===
+| Переменная | Значение
+
+| $sessionId | Заменяется на идентификатор Selenium сессии
+| $browserName | Заменяется на имя браузера, переданное через капабилити
+| $browserVersion | Заменяется на версию браузера, переданную через капабилити
+| $platformName | Заменяется на имя платформы (операционной системы), переданной через капабилити
+| $date | Заменяется на текущую дату, например, `2018-11-01`
+| $quota | Заменяется на имя квоты (т.е. имя пользователя, переданное в Selenium URL)
+|===
++
+Шаблон S3 ключа по-умолчанию - просто `$sessionId`:
++
+Вы можете изменить значение шаблона S3 ключа в файле `service.json`:
++
+.Установка пользовательского значения шаблона S3 ключа в файле `service.json`
+[source,javascript]
+----
+{
+  "s3": {
+    // Остальные настройки S3...
+    "keyPattern": "$quota/$browserName/$browserVersion/$platformName/$sessionId"  <1>
+  },
+  "images": {
+    //...
+  },
+  "annotations": {
+    //...
+  }
+}
+----
+<1> Пользовательский шаблон S3 ключа
++
+Для того, чтобы определить индивидуальный шаблон S3 ключа для каждой браузерной сессии - используйте капабилити `s3KeyPattern`, описанную в разделе <<Специальные капабилити>>.
+
+. После внесений изменений в ConfigMap, содержащий файл `service.json`, или секрет, содержащий пару ключей для S3, все настройки применяются автоматически без перезагрузки Moon.
+
+=== Использование собственного хранилища Docker образов
+
+По-умолчанию Moon скачивает системные Docker-образы (`aerokube/defender`, `aerokube/logger` и так далее) с общедоступного хранилища Docker образов из Интернета. Если в вашей организации из-за требований безопасности требуется скачивать Docker образы из собственного внутреннего хранилища (private Docker registry), вам нужно настроить Moon для работы с этим хранилищем:
+
+. Настройте Kubernetes для правильной работы с внутренним хранилищем:
+
+    $ kubectl create secret docker-registry my-registry.example.com --docker-server=my-registry.example.com --docker-username=some-user --docker-password=registry-password --docker-email=some-user@example.com
+    $ kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "my-registry.example.com"}]}' # Use correct service account name here
+
+. Скопируйте требуемые образы браузеров во внутреннее хранилище:
+
+    selenoid/chrome:73.0 => my-registry.example.com/moon/chrome:73.0
+
+. Обновите <<Список браузеров>> (`browsers.json`), чтобы использовались новые образы:
++
+.Список браузеров с пользовательскими образами браузеров
+[source,javascript]
+----
+{
+  "chrome": {
+    "default": "73.0",
+    "versions": {
+        "73.0": {
+            "image": "my-registry.example.com/moon/chrome:73.0",
+            "port": "4444"
+        },
+        "72.0": {
+            "image": "my-registry.example.com/moon/chrome:72.0",
+            "port": "4444"
+        }
+    }
+  }
+}
+----
+. Скопируйте требуемую версию служебных образов Moon во внутреннее хранилище:
+
+    aerokube/moon-video-recorder:1.3.4 => my-registry.example.com/moon/moon-video-recorder:1.3.4
+    aerokube/defender:1.3.4 => my-registry.example.com/moon/defender:1.3.4
+    aerokube/logger => my-registry.example.com/moon/logger:1.3.4
+
+. Переопределите использыемые системные образы Moon в файле `service.json`:
+
+    $ cat service.json
+    {
+      "images": {
+        "videoRecorder": {
+            "image": "my-registry.example.com/moon/video-recorder:latest-release"
+        },
+        "defender": {
+            "image": "my-registry.example.com/moon/defender:latest-release"
+        },
+        "logger": {
+            "image": "my-registry.example.com/moon/logger:latest-release"
+        }
+      }
+    }
++
+Если в этом файле уже присутствует конфигурация S3 - просто допишите в этот файл новый ключ `images`.
+
+. Сохраните `service.json` в Kubernetes config map, смонтируйте его как файл в контейнер Moon и укажите путь до файл флагом `-config-file`. При внесении изменений в `service.json` в уже смонтированный config map - изменения применяются автоматически без перезагрузки Moon.
+. Скопируйте основные образы Moon во внутреннее хранилище:
+
+    aerokube/moon:1.3.4 => my-registry.example.com/moon/moon:1.3.4
+    aerokube/moon-api:1.3.4 => my-registry.example.com/moon/moon-api:1.3.4
+    aerokube/selenoid-ui:1.6.5 => my-registry.example.com/moon/selenoid-ui:1.6.5
+
+. Используйте основные образы Moon в Kubernetes YAML манифестах, используемых для старта Moon.
