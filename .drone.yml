@@ -23,7 +23,7 @@ pipeline:
   release_docs:
     image: asciidoctor/docker-asciidoctor
     commands:
-      - ./ci/docs.sh ${DRONE_TAG}
+      - ./docs/docs.sh ${DRONE_TAG}
     when:
       event: [tag]
 
