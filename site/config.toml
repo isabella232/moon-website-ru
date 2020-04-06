@@ -12,4 +12,4 @@ enableRobotsTXT = true
 disableKinds = ["RSS", "taxonomy", "taxonomyTerm"]
 
 [params]
-description = "Платформа для тестирования в настольных и мобильных браузерах. Полностью совместима с протоколом Selenium WebDriver. Поддерживает автоматизированное и ручное тестирование. Работает в класстере Kubernetes и Openshift. Работает в на вашем оборудовании или в популярных облачных платформах: Google Cloud, Amazon Web Services, DigitalOcean, Microsoft Azure и других."
+description = "Платформа для тестирования в настольных и мобильных браузерах. Полностью совместима с протоколом Selenium WebDriver. Поддерживает автоматизированное и ручное тестирование. Работает в кластере Kubernetes и Openshift. Работает в на вашем оборудовании или в популярных облачных платформах: Google Cloud, Amazon Web Services, DigitalOcean, Microsoft Azure и других."
