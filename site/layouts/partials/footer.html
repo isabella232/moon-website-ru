@@ -4,14 +4,14 @@
             <nav class="col-12 col-md footer__left">
                 <ul>
                     {{ range .Site.Data.meta.verticals }}
-                    <li><a href="{{ .url }}">{{ .name }}</a></li>
+                    <li><a href="{{ .url }}" target="_blank" title="{{ .name }}">{{ .name }}</a></li>
                     {{ end }}
                 </ul>
             </nav>
             <nav class="col-12 col-md footer__right">
                 <ul>
                     {{ range .Site.Data.meta.navigation }}
-                    <li><a href="{{ .url }}">{{ .name }}</a></li>
+                    <li><a href="{{ .url }}" title="{{ .name }}">{{ .name }}</a></li>
                     {{ end }}
                 </ul>
             </nav>

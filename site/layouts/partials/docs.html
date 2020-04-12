@@ -10,7 +10,7 @@
                 {{ range .Site.Data.meta.docs }}
                 <div class="col-12 col-md-4 mb-4">
                     <div class="docs__doc">
-                        <a href="{{ .url }}"><h3 class="docs__doc-title">{{ .title }}</h3></a>
+                        <a href="{{ .url }}" title="{{ .title }}"><h3 class="docs__doc-title">{{ .title }}</h3></a>
                         <p class="docs__doc-description">
                             {{ .description }}
                         </p>
