@@ -47,7 +47,6 @@
 == Системные требования
 
 * Современная операционная система (Linux, MacOS, Windows), имеющая интерпретатор командной строки
-* Установленная система контроля версий https://git-scm.com/[Git]
 * **Для Kubernetes:** работающий кластер Kubernetes версии 1.13 и выше и установленная утилита https://github.com/kubernetes/kubectl[kubectl]
 * **Для Openshift:** работающий кластер Openshift 3.10 и выше и установленная утилита https://github.com/openshift/oc[oc]
 
