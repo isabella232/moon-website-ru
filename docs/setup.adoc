@@ -69,12 +69,14 @@
 
     $ kubectl get svc -n moon
     NAME      TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
+    browsers  ClusterIP       None           <none>        <none>                          51s
     moon      LoadBalancer   10.63.242.109   <pending>     4444:31894/TCP,8080:30625/TCP   17s
 +
 Когда операция завершится, это будет выглядеть вот так:
 
     $ kubectl get svc -n moon
     NAME      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                         AGE
+    browsers  ClusterIP      None            <none>           <none>                          51s
     moon      LoadBalancer   10.63.242.109   104.154.161.58   4444:31894/TCP,8080:30625/TCP   1m
 
 +
@@ -88,12 +90,16 @@
     http://104.154.161.58:4444/wd/hub
 
 +
-NOTE:  При первом запуске тестов для каждой версии браузера Kubernetes будет скачивать и кешировать образ контейнера этой версии браузера на диске. В зависимости от скорости сетевого соединения это может занять несколько минут.
+NOTE: При первом запуске тестов для каждой версии браузера Kubernetes будет скачивать и кешировать образ контейнера этой версии браузера на диске. В зависимости от скорости сетевого соединения это может занять несколько минут.
 +
 При использовании доменного имени Selenium URL выглядит так:
 
     http://moon.example.com:4444/wd/hub
++
+Список доступных версий браузеров можно получить простым запросом:
 
+    $ curl -s http://104.154.161.58:8888/status
+    {"total":4,"used":0,"queued":0,"pending":0,"browsers":{"chrome":{"81.0":{}},"firefox":{"75.0":{}}}}
 
 === Установка в Openshift
 
