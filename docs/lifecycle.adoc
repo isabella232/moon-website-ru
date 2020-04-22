@@ -149,7 +149,7 @@
 
 === Контакты
 
-* E-mail: mailto:support@aerokube.com[support@aerokube.com]
+* E-mail: mailto:support@aerokube.ru[support@aerokube.ru]
 * Telegram: https://t.me/aerokube_moon[https://t.me/aerokube_moon]
 * Тел.: (812) 602-7195
 
@@ -159,5 +159,5 @@
 * Юридический адрес: 188307, Россия, Ленинградская область, Гатчинский район, г. Гатчина, Красноармейский проспект, д. 50, каб. 7
 * ИНН / КПП: 7841079851 / 470501001
 * ОГРН: 1187847375473
-* E-mail: sales@aerokube.com
+* E-mail: sales@aerokube.ru
 * Телефон: (812) 602-7195
