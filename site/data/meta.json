@@ -60,6 +60,11 @@
       "title": "Общее руководство",
       "description": "Руководство по эксплуатации и использованию Moon",
       "url": "/docs/main.pdf"
+    },
+    {
+      "title": "Лицензионное соглашение",
+      "description": "Типовое лицензионное соглашение на Moon",
+      "url": "/docs/license-agreement.pdf"
     }
   ]
 }
